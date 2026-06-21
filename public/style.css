@@ -101,6 +101,16 @@ input{
   background-repeat:no-repeat; background-position:center center; background-size:60%;
   image-rendering:pixelated; user-select:none; -webkit-user-select:none;
 }
+/* scratch-card reveal mode: a grid of opaque tiles peeled away over the round */
+.scratch{
+  position:absolute; inset:0; display:grid;
+  grid-template-columns:repeat(12,1fr); grid-template-rows:repeat(12,1fr);
+}
+.scratch .stile{
+  background:linear-gradient(135deg,#6a5c3e,#463c28);
+  border:1px solid #2e2718; transition:opacity .35s ease-out;
+}
+.scratch .stile.gone{ opacity:0; }
 /* hangman-style letter mask — tiles grouped into whole words that wrap as a unit */
 .mask{ display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start;
   gap:10px 22px; margin:14px 0 4px; }

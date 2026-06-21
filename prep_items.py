@@ -58,7 +58,7 @@ def is_variant(name):
     return False
 
 # ── boring categories: tiny / samey / many-metal-dupes — bad guessing at zoom ──
-BORING = ["seed", "sapling", "grimy ", "sack", "bird nest", "compost",
+BORING = ["seed", "sapling", "grimy ", "raw ", "sack", "bird nest", "compost",
           " tar", "essence", "bagged", "cannonball",
           "hull parts", "keel parts", "frame parts"]
 def is_boring(name):

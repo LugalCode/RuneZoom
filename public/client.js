@@ -101,6 +101,11 @@ socket.on("state", (s) => {
   // reflect my own ready state on the button
   $("readyBtn").textContent = meP.ready ? "READY ✓ — click to unready" : "I'M READY";
   $("readyBtn").classList.toggle("green", !!meP.ready);
+  // reflect the chosen reveal mode for everyone
+  if (s.mode) {
+    $("setMode").value = s.mode;
+    $("modeNote").textContent = "Mode: " + (s.mode === "scratch" ? "Scratch card" : "Zoom out");
+  }
 });
 
 $("readyBtn").onclick = () => socket.emit("toggleReady");
@@ -134,12 +139,14 @@ socket.on("lobbyMsg", ({ name, text }) => {
   c.scrollTop = c.scrollHeight;
 });
 
-$("setRounds").onchange = $("setTime").onchange = () =>
-  socket.emit("settings", { rounds: $("setRounds").value, roundTime: $("setTime").value });
+$("setRounds").onchange = $("setTime").onchange = $("setMode").onchange = () =>
+  socket.emit("settings", {
+    rounds: $("setRounds").value, roundTime: $("setTime").value, mode: $("setMode").value,
+  });
 $("startBtn").onclick = () => socket.emit("start");
 
-// ── round / zoom animation ──
-socket.on("round", ({ round, totalRounds, itemId, roundTime, mask }) => {
+// ── round: reveal animation (zoom-out OR scratch-card) ──
+socket.on("round", ({ round, totalRounds, itemId, roundTime, mask, mode }) => {
   hide("lobby"); hide("overlay"); show("game");
   clearInterval(cdTimer);
   $("roundLabel").textContent = `Round ${round}/${totalRounds}`;
@@ -156,19 +163,56 @@ socket.on("round", ({ round, totalRounds, itemId, roundTime, mask }) => {
   const box = $("zoombox");
   box.style.backgroundImage = `url("${curIcon}")`;
 
+  const scratchMode = mode === "scratch";
+  let tiles = [];
+  if (scratchMode) {
+    box.style.backgroundSize = "contain";   // full sprite, hidden behind tiles
+    tiles = buildScratch();
+    show("scratch");
+  } else {
+    hide("scratch");
+    $("scratch").innerHTML = "";
+  }
+
   const start = performance.now();
   const durMs = roundTime * 1000;
   cancelAnimationFrame(zoomAnim);
   const tick = (now) => {
     const t = Math.min(1, (now - start) / durMs);
-    const eased = 1 - Math.pow(1 - t, ZOOM_EASE); // fast early, slow late
-    const scale = MAX_ZOOM - (MAX_ZOOM - MIN_ZOOM) * eased;
-    box.style.backgroundSize = `${(ZOOM_BASE * scale).toFixed(1)}%`;
+    if (scratchMode) {
+      // peel tiles away over the round (fast early, slow late) to reveal the sprite
+      const eased = 1 - Math.pow(1 - t, ZOOM_EASE);
+      const reveal = Math.floor(eased * tiles.length);
+      for (let k = 0; k < reveal; k++) tiles[k].classList.add("gone");
+    } else {
+      const eased = 1 - Math.pow(1 - t, ZOOM_EASE); // fast early, slow late
+      const scale = MAX_ZOOM - (MAX_ZOOM - MIN_ZOOM) * eased;
+      box.style.backgroundSize = `${(ZOOM_BASE * scale).toFixed(1)}%`;
+    }
     $("timer").textContent = Math.ceil(roundTime - t * roundTime);
     if (t < 1) zoomAnim = requestAnimationFrame(tick);
   };
   zoomAnim = requestAnimationFrame(tick);
 });
+
+// build a shuffled grid of opaque tiles over the sprite (scratch-card reveal)
+function buildScratch() {
+  const s = $("scratch");
+  s.innerHTML = "";
+  const N = 12 * 12;
+  const tiles = [];
+  for (let i = 0; i < N; i++) {
+    const d = document.createElement("div");
+    d.className = "stile";
+    s.appendChild(d);
+    tiles.push(d);
+  }
+  for (let i = tiles.length - 1; i > 0; i--) { // shuffle reveal order
+    const j = (Math.random() * (i + 1)) | 0;
+    [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+  }
+  return tiles;
+}
 
 // ── hangman mask ──
 function renderMask(mask) {
@@ -223,6 +267,7 @@ socket.on("correct", ({ id, name, pts }) => {
 // ── reveal ──
 socket.on("reveal", ({ name, tier, vol, players, nextIn }) => {
   cancelAnimationFrame(zoomAnim);
+  hide("scratch");
   $("ovTitle").textContent = "IT WAS…";
   $("ovImg").src = curIcon;
   $("ovImg").classList.remove("hidden");

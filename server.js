@@ -55,7 +55,7 @@ function sendState(code) {
   if (!room) return;
   io.to(code).emit("state", {
     code, phase: room.phase, round: room.round, totalRounds: room.settings.rounds,
-    players: publicPlayers(room),
+    mode: room.settings.mode, players: publicPlayers(room),
   });
 }
 
@@ -82,6 +82,7 @@ function startRound(code) {
   io.to(code).emit("round", {
     round: room.round, totalRounds: room.settings.rounds,
     itemId: room.item.id, roundTime: room.settings.roundTime, mask: room.mask,
+    mode: room.settings.mode,
   });
 
   // free letter reveals on a timer; always leave ~30% hidden to guess
@@ -143,7 +144,7 @@ io.on("connection", (socket) => {
     const c = roomCode();
     rooms[c] = {
       code: c, hostId: socket.id, players: {}, phase: "lobby", round: 0,
-      settings: { rounds: 5, roundTime: 30 }, item: null, order: [], timer: null,
+      settings: { rounds: 5, roundTime: 30, mode: "zoom" }, item: null, order: [], timer: null,
     };
     join(c, name);
   });
@@ -179,6 +180,7 @@ io.on("connection", (socket) => {
     if (!room || socket.id !== room.hostId || room.phase !== "lobby") return;
     room.settings.rounds = Math.min(20, Math.max(1, parseInt(s.rounds) || 5));
     room.settings.roundTime = Math.min(60, Math.max(10, parseInt(s.roundTime) || 30));
+    if (s.mode === "scratch" || s.mode === "zoom") room.settings.mode = s.mode;
     sendState(code);
   });
 
