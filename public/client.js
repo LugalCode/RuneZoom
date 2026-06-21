@@ -10,12 +10,29 @@ let cdTimer = null;
 let maskTiles = [];
 const MAX_ZOOM = 12, MIN_ZOOM = 1.1;
 
-socket.on("connect", () => (me.id = socket.id));
+// ── connection status (so buttons are never a silent dead-end) ──
+function setConn(connected, msg) {
+  $("createBtn").disabled = !connected;
+  $("joinBtn").disabled = !connected;
+  if (msg !== undefined) $("homeErr").textContent = msg;
+}
+setConn(false, "Connecting to server…");
+socket.on("connect", () => { me.id = socket.id; setConn(true, ""); });
+socket.on("disconnect", () => setConn(false, "Lost connection — reconnecting…"));
+socket.on("connect_error", () =>
+  setConn(false, "Waking the server… first visit can take ~30–50s, hang tight."));
+socket.io.on("reconnect_attempt", () =>
+  setConn(false, "Waking the server… first visit can take ~30–50s, hang tight."));
 
 // ── home ──
-$("createBtn").onclick = () => socket.emit("create", { name: $("name").value });
-$("joinBtn").onclick = () =>
+$("createBtn").onclick = () => {
+  if (!socket.connected) return setConn(false, "Not connected yet — one sec…");
+  socket.emit("create", { name: $("name").value });
+};
+$("joinBtn").onclick = () => {
+  if (!socket.connected) return setConn(false, "Not connected yet — one sec…");
   socket.emit("join", { code: $("codeIn").value, name: $("name").value });
+};
 $("codeIn").addEventListener("keydown", (e) => { if (e.key === "Enter") $("joinBtn").click(); });
 // prefill code from ?room=XXXX
 const qp = new URLSearchParams(location.search).get("room");

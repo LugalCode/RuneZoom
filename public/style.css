@@ -58,6 +58,7 @@ input{
   text-shadow:2px 2px 0 #000;
 }
 .btn:hover{ filter:brightness(1.12); }
+.btn:disabled{ opacity:0.5; cursor:not-allowed; filter:none; }
 .btn.green{ background:linear-gradient(#2f6e26,#1d4a18); border-top-color:#4f9a44; border-left-color:#4f9a44; color:var(--rs-yellow); }
 .or{ text-align:center; margin:14px 0 10px; opacity:0.6; }
 .joinrow{ display:flex; gap:10px; }
