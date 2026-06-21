@@ -78,6 +78,7 @@ input{
 .readytag{ font-size:16px; }
 .readytag.is{ color:var(--rs-green); }
 .readytag.no{ color:#8a7a52; opacity:0.8; }
+#copyLink{ margin-bottom:14px; }
 #readyBtn{ margin:2px 0 14px; }
 .lobbychat{ margin-top:16px; }
 .lobbychat .titlebar{ margin-bottom:8px; }

@@ -8,7 +8,8 @@ let me = { id: null, host: false };
 let zoomAnim = null;
 let cdTimer = null;
 let maskTiles = [];
-const MAX_ZOOM = 12, MIN_ZOOM = 1.1;
+const MAX_ZOOM = 9, MIN_ZOOM = 1.1;
+const ZOOM_EASE = 2.4;   // >1 = blow past the extreme zoom fast, linger on the readable range
 
 // ── connection status (so buttons are never a silent dead-end) ──
 function setConn(connected, msg) {
@@ -85,6 +86,19 @@ socket.on("state", (s) => {
 
 $("readyBtn").onclick = () => socket.emit("toggleReady");
 
+$("copyLink").onclick = async () => {
+  const url = location.href; // includes ?room=CODE
+  try {
+    await navigator.clipboard.writeText(url);
+    $("copyLink").textContent = "LINK COPIED ✓";
+  } catch {
+    prompt("Copy this lobby link:", url);
+    $("copyLink").textContent = "📋 COPY LOBBY LINK";
+    return;
+  }
+  setTimeout(() => ($("copyLink").textContent = "📋 COPY LOBBY LINK"), 1500);
+};
+
 // ── lobby chat ──
 $("lobbyChatForm").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -126,7 +140,8 @@ socket.on("round", ({ round, totalRounds, itemId, roundTime, mask }) => {
   cancelAnimationFrame(zoomAnim);
   const tick = (now) => {
     const t = Math.min(1, (now - start) / durMs);
-    const scale = MAX_ZOOM - (MAX_ZOOM - MIN_ZOOM) * t;
+    const eased = 1 - Math.pow(1 - t, ZOOM_EASE); // fast early, slow late
+    const scale = MAX_ZOOM - (MAX_ZOOM - MIN_ZOOM) * eased;
     img.style.transform = `scale(${scale.toFixed(2)})`;
     $("timer").textContent = Math.ceil(roundTime - t * roundTime);
     if (t < 1) zoomAnim = requestAnimationFrame(tick);
