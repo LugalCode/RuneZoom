@@ -36,6 +36,24 @@ def tier_of(v):
             return label
     return "obscure"
 
+from PIL import Image
+
+# Flat-sprite filter: many OSRS icons are a single blocky colour (dragon leather,
+# d'hide, some gems) that look identical at every zoom -> unfair to guess.
+# We measure internal luminance contrast (std-dev over opaque pixels); shiny
+# items (bars, weapons) score high, flat fills score low.
+FILTER = "--no-filter" not in sys.argv
+DETAIL_MIN = 18.0   # lumstd below this = too flat, dropped
+
+def lum_std(path):
+    im = Image.open(path).convert("RGBA")
+    op = [(r, g, b) for (r, g, b, a) in im.get_flattened_data() if a > 32]
+    if not op:
+        return 0.0
+    lum = [0.299 * r + 0.587 * g + 0.114 * b for (r, g, b) in op]
+    m = sum(lum) / len(lum)
+    return (sum((x - m) ** 2 for x in lum) / len(lum)) ** 0.5
+
 mapping = fetch_json("mapping.json", f"{API}/mapping")
 vol = fetch_json("vol24h.json", f"{API}/24h")["data"]
 
@@ -58,6 +76,7 @@ pool = pool[:TOP_N]
 
 items = []
 ok = fail = 0
+dropped = []
 for p in pool:
     dest = ICONS / f"{p['id']}.png"
     if not dest.exists():
@@ -71,9 +90,19 @@ for p in pool:
             fail += 1
             continue
     ok += 1
+    if FILTER:
+        s = lum_std(dest)
+        if s < DETAIL_MIN:
+            dropped.append((s, p["name"]))
+            dest.unlink(missing_ok=True)   # don't ship flat sprites
+            continue
     # only ship what's needed to the client (NOT a giveaway beyond the icon)
     items.append({"id": p["id"], "name": p["name"], "tier": p["tier"], "vol": p["vol"]})
 
 # server-side only (NOT under public/) so names aren't trivially fetchable
 (HERE / "items.json").write_text(json.dumps(items), encoding="utf-8")
-print(f"pool={len(items)} icons_ok={ok} fail={fail}  -> items.json (server-side)")
+if dropped:
+    print(f"filtered {len(dropped)} flat sprites (lumstd < {DETAIL_MIN}):")
+    for s, n in sorted(dropped):
+        print(f"  {s:5.1f}  {n}")
+print(f"pool={len(items)} icons_ok={ok} fail={fail} dropped={len(dropped)}  -> items.json")
