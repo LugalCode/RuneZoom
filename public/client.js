@@ -8,8 +8,8 @@ let me = { id: null, host: false };
 let zoomAnim = null;
 let cdTimer = null;
 let maskTiles = [];
-const MAX_ZOOM = 9, MIN_ZOOM = 1.1;
-const ZOOM_EASE = 2.4;   // >1 = blow past the extreme zoom fast, linger on the readable range
+const MAX_ZOOM = 8, MIN_ZOOM = 1.1;
+const ZOOM_EASE = 3.4;   // >1 = blow past the extreme zoom fast, linger on the readable range
 
 // ── connection status (so buttons are never a silent dead-end) ──
 function setConn(connected, msg) {
