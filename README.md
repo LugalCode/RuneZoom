@@ -1,8 +1,9 @@
-# OSRS Item-Zoom 🔍
+# RuneZoom 🔍
 
 Multiplayer "guess the Old School RuneScape item before it sharpens" game —
 skribbl.io-style. The icon starts massively zoomed in and zooms out over the
-round; type the name; **fastest correct guess scores most**.
+round; type the name; **fastest correct guess scores most**. Hangman-style
+letter hints fill in as the round runs.
 
 - **Difficulty pool** = top 350 items by real Grand Exchange 24h volume (most
   traded = most recognisable = fair). Reveal shows the live trade volume.
@@ -11,21 +12,20 @@ round; type the name; **fastest correct guess scores most**.
 
 ## Run locally
 ```bash
-cd game
 npm install
 npm start            # http://localhost:3000
 ```
 Open two browser tabs to test solo, or share with friends on your LAN.
 
 ### Play with friends right now (no deploy)
-Install [ngrok](https://ngrok.com), then:
+Quick public tunnel, no account needed (cloudflared):
 ```bash
-ngrok http 3000
+cloudflared tunnel --url http://localhost:3000
 ```
-Share the `https://….ngrok-free.app` URL. Done.
+Share the printed `https://….trycloudflare.com` URL. Temporary — changes each run.
 
 ## Deploy a permanent public URL
-Push the `game/` folder to a GitHub repo, then either:
+Push this repo to GitHub, then either:
 
 **Render** (free tier, sleeps when idle)
 1. render.com → New → Blueprint → pick the repo (uses `render.yaml`).
@@ -37,11 +37,11 @@ Push the `game/` folder to a GitHub repo, then either:
 Both expose `PORT` via env var, which the server already reads.
 
 ## Refresh the item pool / volumes
-Snapshots live in `../data/`. To re-pull and rebuild the pool + icons:
+Self-contained — the script fetches the OSRS Wiki prices API itself (cached in
+`./data`). To rebuild the pool + icons:
 ```bash
-# from osrs/  (parent) refresh the API snapshots first, then:
-cd game
-python prep_items.py 350      # top N by volume -> items.json + public/icons/
+python prep_items.py 350             # top N by volume -> items.json + public/icons/
+python prep_items.py 350 --refresh   # also re-pull live volumes first
 ```
 
 ## Files
