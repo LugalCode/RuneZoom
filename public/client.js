@@ -8,6 +8,8 @@ let me = { id: null, host: false };
 let zoomAnim = null;
 let cdTimer = null;
 let maskTiles = [];
+let curIcon = "";   // current round's icon url (kept for the reveal overlay)
+const ZOOM_BASE = 60;  // % of box the sprite fills at scale 1 (matches old img sizing)
 const MAX_ZOOM = 8, MIN_ZOOM = 1.1;
 const ZOOM_EASE = 3.4;   // >1 = blow past the extreme zoom fast, linger on the readable range
 
@@ -149,8 +151,10 @@ socket.on("round", ({ round, totalRounds, itemId, roundTime, mask }) => {
   $("chat").innerHTML = "";
   renderMask(mask);
 
-  const img = $("zoomImg");
-  img.src = `icons/${itemId}.png`;
+  // render as a CSS background (no draggable / right-click-saveable <img> to cheat with)
+  curIcon = `icons/${itemId}.png`;
+  const box = $("zoombox");
+  box.style.backgroundImage = `url("${curIcon}")`;
 
   const start = performance.now();
   const durMs = roundTime * 1000;
@@ -159,7 +163,7 @@ socket.on("round", ({ round, totalRounds, itemId, roundTime, mask }) => {
     const t = Math.min(1, (now - start) / durMs);
     const eased = 1 - Math.pow(1 - t, ZOOM_EASE); // fast early, slow late
     const scale = MAX_ZOOM - (MAX_ZOOM - MIN_ZOOM) * eased;
-    img.style.transform = `scale(${scale.toFixed(2)})`;
+    box.style.backgroundSize = `${(ZOOM_BASE * scale).toFixed(1)}%`;
     $("timer").textContent = Math.ceil(roundTime - t * roundTime);
     if (t < 1) zoomAnim = requestAnimationFrame(tick);
   };
@@ -220,7 +224,7 @@ socket.on("correct", ({ id, name, pts }) => {
 socket.on("reveal", ({ name, tier, vol, players, nextIn }) => {
   cancelAnimationFrame(zoomAnim);
   $("ovTitle").textContent = "IT WAS…";
-  $("ovImg").src = $("zoomImg").src;
+  $("ovImg").src = curIcon;
   $("ovImg").classList.remove("hidden");
   $("ovName").textContent = name;
   $("ovMeta").textContent = `${tier.toUpperCase()} • ${vol.toLocaleString()} traded/day`;

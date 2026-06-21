@@ -93,12 +93,14 @@ input{
 .hud{ display:flex; justify-content:space-between; font-family:'RSBold',sans-serif; font-size:24px;
   color:var(--ink); margin-bottom:12px; }
 .timer{ color:var(--rs-red); text-shadow:1px 1px 0 rgba(255,255,255,0.3); }
+/* sprite rendered as a background-image (not an <img>) so it can't be
+   drag-ghosted or right-click-saved to cheat the reveal */
 .zoombox{
-  width:100%; aspect-ratio:1/1; overflow:hidden; position:relative; background:#0f0d09;
+  width:100%; aspect-ratio:1/1; overflow:hidden; position:relative; background-color:#0f0d09;
   border:4px solid #2e2718; border-top-color:#7a6a47; border-left-color:#7a6a47;
-  display:flex; align-items:center; justify-content:center;
+  background-repeat:no-repeat; background-position:center center; background-size:60%;
+  image-rendering:pixelated; user-select:none; -webkit-user-select:none;
 }
-.zoombox img{ image-rendering:pixelated; width:60%; height:60%; object-fit:contain; transform:scale(12); transition:transform 0.25s linear; }
 /* hangman-style letter mask — tiles grouped into whole words that wrap as a unit */
 .mask{ display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start;
   gap:10px 22px; margin:14px 0 4px; }
