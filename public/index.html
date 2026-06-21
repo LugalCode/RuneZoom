@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RuneZoom</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ── HOME ── -->
+  <section id="home" class="screen frame">
+    <div class="panel">
+      <h1 class="logo">Rune<span>Zoom</span></h1>
+      <div class="byline">By Lugal</div>
+      <p class="tag">Guess the OSRS item before it sharpens. Fastest wins.</p>
+      <input id="name" maxlength="16" placeholder="your name" autocomplete="off">
+      <button id="createBtn" class="btn green">CREATE LOBBY</button>
+      <div class="or">— or join —</div>
+      <div class="joinrow">
+        <input id="codeIn" maxlength="4" placeholder="CODE" autocomplete="off">
+        <button id="joinBtn" class="btn">JOIN</button>
+      </div>
+      <div id="homeErr" class="err"></div>
+    </div>
+  </section>
+
+  <!-- ── LOBBY ── -->
+  <section id="lobby" class="screen frame hidden">
+    <div class="panel">
+      <div class="titlebar">LOBBY <span id="lobbyCode" class="code"></span></div>
+      <p class="hint">Share the code (or link) with friends.</p>
+      <ul id="lobbyPlayers" class="players"></ul>
+      <div id="hostControls" class="hostbox hidden">
+        <label>Rounds <input id="setRounds" type="number" min="1" max="20" value="5"></label>
+        <label>Seconds/round <input id="setTime" type="number" min="10" max="60" value="30"></label>
+        <button id="startBtn" class="btn green">START GAME</button>
+      </div>
+      <p id="waitHost" class="hint">Waiting for the host to start…</p>
+    </div>
+  </section>
+
+  <!-- ── GAME ── -->
+  <section id="game" class="screen hidden">
+    <div class="gamewrap">
+      <div class="frame stage-frame">
+        <div class="panel stage-panel">
+          <div class="hud"><span id="roundLabel">Round 1/5</span><span id="timer" class="timer">30</span></div>
+          <div id="zoombox" class="zoombox"><img id="zoomImg" alt=""></div>
+          <div id="mask" class="mask"></div>
+          <div id="statusLine" class="statusline">Type your guess ↓</div>
+          <form id="guessForm" class="guessrow">
+            <input id="guessIn" placeholder="type item name + Enter" autocomplete="off">
+            <button class="btn green">GUESS</button>
+          </form>
+        </div>
+      </div>
+      <div class="side">
+        <div class="frame side-frame">
+          <div class="panel side-panel">
+            <div class="titlebar mini">SCORES</div>
+            <ul id="scores" class="scores"></ul>
+          </div>
+        </div>
+        <div class="frame side-frame chat-frame">
+          <div class="panel side-panel">
+            <div class="titlebar mini">CHAT</div>
+            <ul id="chat" class="chat"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── REVEAL / GAMEOVER overlay ── -->
+  <div id="overlay" class="overlay hidden">
+    <div class="frame"><div class="panel ovpanel">
+      <div id="ovTitle" class="ovtitle">IT WAS…</div>
+      <img id="ovImg" class="ovimg" alt="">
+      <div id="ovName" class="ovname"></div>
+      <div id="ovMeta" class="ovmeta"></div>
+      <div id="ovCountdown" class="ovcd"></div>
+      <ul id="ovScores" class="scores"></ul>
+      <button id="ovHome" class="btn hidden">BACK TO HOME</button>
+    </div></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>

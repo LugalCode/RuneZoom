@@ -1,0 +1,13 @@
+# Render Blueprint. Deploy: push this game/ folder to GitHub, then on
+# render.com -> New -> Blueprint -> pick the repo. Free plan sleeps when idle.
+services:
+  - type: web
+    name: osrs-item-zoom
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
