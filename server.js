@@ -45,7 +45,8 @@ const rooms = {}; // code -> room
 
 function publicPlayers(room) {
   return Object.entries(room.players).map(([id, p]) => ({
-    id, name: p.name, score: p.score, guessed: !!p.guessed, host: id === room.hostId,
+    id, name: p.name, score: p.score, guessed: !!p.guessed,
+    ready: !!p.ready, host: id === room.hostId,
   })).sort((a, b) => b.score - a.score);
 }
 
@@ -133,7 +134,7 @@ io.on("connection", (socket) => {
   const join = (c, name) => {
     code = c;
     socket.join(c);
-    rooms[c].players[socket.id] = { name: (name || "Guest").slice(0, 16), score: 0, guessed: false };
+    rooms[c].players[socket.id] = { name: (name || "Guest").slice(0, 16), score: 0, guessed: false, ready: false };
     socket.emit("joined", { code: c });
     sendState(c);
   };
@@ -152,6 +153,25 @@ io.on("connection", (socket) => {
     if (!rooms[c]) return socket.emit("errorMsg", "Room not found.");
     if (rooms[c].phase !== "lobby") return socket.emit("errorMsg", "Game already started.");
     join(c, name);
+  });
+
+  socket.on("toggleReady", () => {
+    const room = rooms[code];
+    if (!room) return;
+    const p = room.players[socket.id];
+    if (!p) return;
+    p.ready = !p.ready;
+    sendState(code);
+  });
+
+  socket.on("lobbyChat", (text) => {
+    const room = rooms[code];
+    if (!room) return;
+    const p = room.players[socket.id];
+    if (!p) return;
+    text = (text || "").toString().slice(0, 120);
+    if (!text.trim()) return;
+    io.to(code).emit("lobbyMsg", { name: p.name, text });
   });
 
   socket.on("settings", (s) => {

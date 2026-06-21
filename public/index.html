@@ -31,12 +31,22 @@
       <div class="titlebar">LOBBY <span id="lobbyCode" class="code"></span></div>
       <p class="hint">Share the code (or link) with friends.</p>
       <ul id="lobbyPlayers" class="players"></ul>
+      <button id="readyBtn" class="btn">I'M READY</button>
       <div id="hostControls" class="hostbox hidden">
         <label>Rounds <input id="setRounds" type="number" min="1" max="20" value="5"></label>
         <label>Seconds/round <input id="setTime" type="number" min="10" max="60" value="30"></label>
         <button id="startBtn" class="btn green">START GAME</button>
       </div>
       <p id="waitHost" class="hint">Waiting for the host to start…</p>
+
+      <div class="lobbychat">
+        <div class="titlebar mini">LOBBY CHAT</div>
+        <ul id="lobbyChatList" class="chat"></ul>
+        <form id="lobbyChatForm" class="guessrow">
+          <input id="lobbyChatIn" placeholder="say something…" maxlength="120" autocomplete="off">
+          <button class="btn">SEND</button>
+        </form>
+      </div>
     </div>
   </section>
 

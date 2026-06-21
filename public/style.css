@@ -75,6 +75,13 @@ input{
 }
 .players .you{ color:var(--rs-red); }
 .players .crown::after{ content:" 👑"; }
+.readytag{ font-size:16px; }
+.readytag.is{ color:var(--rs-green); }
+.readytag.no{ color:#8a7a52; opacity:0.8; }
+#readyBtn{ margin:2px 0 14px; }
+.lobbychat{ margin-top:16px; }
+.lobbychat .titlebar{ margin-bottom:8px; }
+.lobbychat .chat{ height:120px; margin-bottom:10px; }
 .hostbox{ display:flex; flex-direction:column; gap:10px; }
 .hostbox label{ display:flex; justify-content:space-between; align-items:center; font-size:18px; }
 .hostbox input{ width:90px; margin:0; }

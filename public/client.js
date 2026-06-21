@@ -47,7 +47,7 @@ socket.on("joined", ({ code }) => {
 });
 
 // ── lobby / scores ──
-function renderPlayers(ul, players, withPts) {
+function renderPlayers(ul, players, opts = {}) {
   ul.innerHTML = "";
   for (const p of players) {
     const li = document.createElement("li");
@@ -56,22 +56,49 @@ function renderPlayers(ul, players, withPts) {
     if (p.id === me.id) tag.classList.add("you");
     if (p.host) tag.classList.add("crown");
     li.appendChild(tag);
-    if (withPts) {
+    if (opts.pts) {
       const pts = document.createElement("span");
       pts.className = "pts" + (p.guessed ? " done" : "");
       pts.textContent = p.score;
       li.appendChild(pts);
+    } else if (opts.ready) {
+      const r = document.createElement("span");
+      r.className = "readytag " + (p.ready ? "is" : "no");
+      r.textContent = p.ready ? "READY ✓" : "not ready";
+      li.appendChild(r);
     }
     ul.appendChild(li);
   }
 }
 
 socket.on("state", (s) => {
-  me.host = (s.players.find((p) => p.id === me.id) || {}).host || false;
-  renderPlayers($("lobbyPlayers"), s.players, false);
-  renderPlayers($("scores"), s.players, true);
+  const meP = s.players.find((p) => p.id === me.id) || {};
+  me.host = !!meP.host;
+  renderPlayers($("lobbyPlayers"), s.players, { ready: true });
+  renderPlayers($("scores"), s.players, { pts: true });
   $("hostControls").classList.toggle("hidden", !me.host);
   $("waitHost").classList.toggle("hidden", me.host);
+  // reflect my own ready state on the button
+  $("readyBtn").textContent = meP.ready ? "READY ✓ — click to unready" : "I'M READY";
+  $("readyBtn").classList.toggle("green", !!meP.ready);
+});
+
+$("readyBtn").onclick = () => socket.emit("toggleReady");
+
+// ── lobby chat ──
+$("lobbyChatForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const v = $("lobbyChatIn").value.trim();
+  if (!v) return;
+  socket.emit("lobbyChat", v);
+  $("lobbyChatIn").value = "";
+});
+socket.on("lobbyMsg", ({ name, text }) => {
+  const li = document.createElement("li");
+  li.innerHTML = `<b>${escapeHtml(name)}:</b> ${escapeHtml(text)}`;
+  const c = $("lobbyChatList");
+  c.appendChild(li);
+  c.scrollTop = c.scrollHeight;
 });
 
 $("setRounds").onchange = $("setTime").onchange = () =>
