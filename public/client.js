@@ -17,8 +17,23 @@ function setConn(connected, msg) {
   $("joinBtn").disabled = !connected;
   if (msg !== undefined) $("homeErr").textContent = msg;
 }
+// remember the player's name across visits; name is required (no silent guest)
+const savedName = localStorage.getItem("rz_name") || "";
+if (savedName) $("name").value = savedName;
+function getName() {
+  const n = $("name").value.trim();
+  if (!n) { $("homeErr").textContent = "Enter a name first ↑"; $("name").focus(); return null; }
+  localStorage.setItem("rz_name", n);
+  return n;
+}
+
+// arriving via ?room=XXXX: prefill the code and prompt for a name (don't auto-join)
+const qp = (new URLSearchParams(location.search).get("room") || "").toUpperCase();
+const joinPrompt = () => (qp ? `Enter your name to join room ${qp} ↑` : "");
+if (qp) { $("codeIn").value = qp; setTimeout(() => $("name").focus(), 50); }
+
 setConn(false, "Connecting to server…");
-socket.on("connect", () => { me.id = socket.id; setConn(true, ""); });
+socket.on("connect", () => { me.id = socket.id; setConn(true, joinPrompt()); if (qp) $("name").focus(); });
 socket.on("disconnect", () => setConn(false, "Lost connection — reconnecting…"));
 socket.on("connect_error", () =>
   setConn(false, "Waking the server… first visit can take ~30–50s, hang tight."));
@@ -27,17 +42,19 @@ socket.io.on("reconnect_attempt", () =>
 
 // ── home ──
 $("createBtn").onclick = () => {
+  const n = getName(); if (!n) return;
   if (!socket.connected) return setConn(false, "Not connected yet — one sec…");
-  socket.emit("create", { name: $("name").value });
+  socket.emit("create", { name: n });
 };
 $("joinBtn").onclick = () => {
+  const n = getName(); if (!n) return;
   if (!socket.connected) return setConn(false, "Not connected yet — one sec…");
-  socket.emit("join", { code: $("codeIn").value, name: $("name").value });
+  socket.emit("join", { code: $("codeIn").value, name: n });
 };
 $("codeIn").addEventListener("keydown", (e) => { if (e.key === "Enter") $("joinBtn").click(); });
-// prefill code from ?room=XXXX
-const qp = new URLSearchParams(location.search).get("room");
-if (qp) $("codeIn").value = qp.toUpperCase();
+$("name").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") ($("codeIn").value.trim() ? $("joinBtn") : $("createBtn")).click();
+});
 
 socket.on("errorMsg", (m) => ($("homeErr").textContent = m));
 
